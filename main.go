@@ -2,11 +2,14 @@
 package main
 
 import (
+	"database/sql"
 	"goshare/handlers"
+	"goshare/storage"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type test struct {
@@ -26,13 +29,17 @@ func main() {
 	//	fmt.Println(r)
 	//	fmt.Fprintf(w, r.UserAgent())
 	//}).Methods("GET")
-	t := test{key: "a"}
-	log.Println(t.key)
-	log.Println(t.value == "")
+	db, e := sql.Open("sqlite3", "./test.db")
+	if e != nil {
+		log.Panicln(e)
+	}
+	storage.Initialize(db)
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./files/")))).Methods("GET")
 	r.HandleFunc("/upload", handlers.Upload).Methods("POST")
+
 	e = http.ListenAndServe("127.0.0.1:8080", r)
 	if e != nil {
 		log.Panicln(e)
 	}
+	defer db.Close()
 }

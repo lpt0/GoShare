@@ -15,38 +15,36 @@ type Storage interface {
 	GetUpload(ID string) (Object, error)
 }
 
-// Handler consists of the database connection.
-// db can be lowercase (not exported) since it is only used here (?)
-type Handler struct {
-	db *sql.DB
-}
+// db is globalized for now
+var db *sql.DB
 
 // IDExists attempts to query one row for the passed ID.
 // If it the query scans without error, that means the ID was found and this will return true.
 // If the scan method returns ErrNoRows, that means it was not found and will return false.
-func (h Handler) IDExists(ID string) (bool, error) {
+func IDExists(ID string) bool {
 	log.Printf("Attempting to query for ID %s\n...", ID)
-	r := h.db.QueryRow("SELECT id FROM uploads WHERE id=?", ID)
+	r := db.QueryRow("SELECT id FROM uploads WHERE id=$1", ID)
 	e := r.Scan()
+	log.Println(e)
 	if e != nil && e == sql.ErrNoRows {
 		log.Printf("ID %s not found.\n", ID)
-		return false, nil
+		return false
 	} else if e == nil {
-		log.Printf("IDExists ID %s had an error: %v\n", ID, e)
-		return false, e
+		log.Panicf("IDExists ID %s had an error: %v\n", ID, e)
+		return false
 	}
-	return false, nil
+	return true
 }
 
 // AddUpload adds an uploaded file to the database.
 // Returns true if database insert succeeds - false otherwise.
-func (h Handler) AddUpload(object Object) (bool, error) {
+func AddUpload(object Object) (bool, error) {
 	log.Printf("Attempting to add %v to database...", object)
 	if object.ID == "" {
 		log.Println("AddUpload ID field is empty!")
 		return false, errors.New("ID field cannot be empty")
 	}
-	_, e := h.db.Exec(
+	_, e := db.Exec(
 		"INSERT INTO uploads VALUES($1, $2, $3, $4, $5, $6)",
 		object.ID,
 		object.Date,
@@ -64,10 +62,10 @@ func (h Handler) AddUpload(object Object) (bool, error) {
 // GetUpload will return an object containing the basic upload data to view a file/URL.
 // Object will be populated with the Type and Location of the upload, if it exists.
 // An error will be returned if the lookup failed.
-func (h Handler) GetUpload(ID string) (Object, error) {
+func GetUpload(ID string) (Object, error) {
 	o := Object{}
 	log.Printf("Attempting to get basic upload ID %s\n", ID)
-	r := h.db.QueryRow("SELECT type, location FROM uploads WHERE id=?", ID)
+	r := db.QueryRow("SELECT type, location FROM uploads WHERE id=?", ID)
 	e := r.Scan(&o.Type, &o.Location)
 	if e != nil {
 		log.Printf("GetUpload ID %s had an error: %v\n", ID, e)
@@ -77,13 +75,22 @@ func (h Handler) GetUpload(ID string) (Object, error) {
 	return o, nil
 }
 
-/** Ref: https://github.com/sohamkamani/blog_example__go_web_db
-// Storage is the package-global variable for referencing the storage interface (with handler) (?)
-// TODO: Figure out if this is a bad idea
-var storage Storage
-
-// Init sets the package's storage variable and attempts to create the proper table.
-func Init(s Storage) {
-	storage = s
+// Initialize will create the proper table in the database, if not present.
+func Initialize(d *sql.DB) {
+	db = d
+	r, e := d.Exec(`
+		CREATE TABLE IF NOT EXISTS uploads (
+			id CHAR(6),
+			date BIGINT,
+			uploader VARCHAR(255),
+			type INT,
+			location TEXT,
+			original_name TEXT
+		);
+	`)
+	if e != nil {
+		log.Panicln(e)
+	}
+	i, e := r.RowsAffected()
+	log.Printf("Rows affected %d; error %v\n", i, e)
 }
-**/

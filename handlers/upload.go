@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"goshare/storage"
 	"io"
 	"log"
 	"math/rand"
@@ -24,6 +25,10 @@ func randomName() string {
 		n += string(alphabet[rand.Intn(52)])
 	}
 	// TODO: Figure out how to properly pass a DB
+	if storage.IDExists(n) {
+		return randomName()
+	}
+	log.Printf("Random ID generated: %s\n", n)
 	return n
 }
 
@@ -32,7 +37,7 @@ func fileUpload(u multipart.File, h *multipart.FileHeader, e error) (string, err
 	if e != nil {
 		return "", e
 	}
-	f, e := os.Create("files/" + h.Filename)
+	f, e := os.Create("files/" + n)
 	if e != nil {
 		return "", e
 	}
@@ -41,7 +46,8 @@ func fileUpload(u multipart.File, h *multipart.FileHeader, e error) (string, err
 	if e != nil {
 		return "", e
 	}
-	log.Println(n)
+	r, e := storage.AddUpload(storage.Object{ID: n, Type: 0, OriginalName: h.Filename, Location: f.Name()})
+	log.Printf("Result: %v, Error: %v\n", r, e)
 	return n, nil
 }
 
