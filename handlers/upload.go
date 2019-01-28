@@ -23,7 +23,7 @@ func randomName() string {
 	for i := 0; i < 6; i++ {
 		n += string(alphabet[rand.Intn(52)])
 	}
-	// Query database for it
+	// TODO: Figure out how to properly pass a DB
 	return n
 }
 

@@ -47,7 +47,7 @@ func (h Handler) AddUpload(object Object) (bool, error) {
 		return false, errors.New("ID field cannot be empty")
 	}
 	_, e := h.db.Exec(
-		"INSERT INTO uploads VALUES(?, ?, ?, ?, ?, ?)",
+		"INSERT INTO uploads VALUES($1, $2, $3, $4, $5, $6)",
 		object.ID,
 		object.Date,
 		object.Uploader,
@@ -65,15 +65,25 @@ func (h Handler) AddUpload(object Object) (bool, error) {
 // Object will be populated with the Type and Location of the upload, if it exists.
 // An error will be returned if the lookup failed.
 func (h Handler) GetUpload(ID string) (Object, error) {
-	var t Type   // Type
-	var l string // Location
+	o := Object{}
 	log.Printf("Attempting to get basic upload ID %s\n", ID)
 	r := h.db.QueryRow("SELECT type, location FROM uploads WHERE id=?", ID)
-	e := r.Scan(&t, &l)
+	e := r.Scan(&o.Type, &o.Location)
 	if e != nil {
 		log.Printf("GetUpload ID %s had an error: %v\n", ID, e)
 		return Object{}, e
 	}
 	log.Printf("Query succeeded for ID %s: %v\n", ID, r)
-	return Object{Type: t, Location: l}, nil
+	return o, nil
 }
+
+/** Ref: https://github.com/sohamkamani/blog_example__go_web_db
+// Storage is the package-global variable for referencing the storage interface (with handler) (?)
+// TODO: Figure out if this is a bad idea
+var storage Storage
+
+// Init sets the package's storage variable and attempts to create the proper table.
+func Init(s Storage) {
+	storage = s
+}
+**/
