@@ -2,7 +2,7 @@
 package main
 
 import (
-	"goshare/routes"
+	"goshare/handlers"
 	"log"
 	"net/http"
 
@@ -30,7 +30,7 @@ func main() {
 	log.Println(t.key)
 	log.Println(t.value == "")
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./files/")))).Methods("GET")
-	r.HandleFunc("/upload", routes.Upload).Methods("POST")
+	r.HandleFunc("/upload", handlers.Upload).Methods("POST")
 	e = http.ListenAndServe("127.0.0.1:8080", r)
 	if e != nil {
 		log.Panicln(e)
