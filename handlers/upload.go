@@ -80,12 +80,13 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			log.Println(r.Header.Get("Content-Type"))
 			name, e = fileUpload(r.FormFile("file"))
 		}
-	} else if r.Header.Get("Location") != "" {
+	}
+	if name == "" && r.Header.Get("Location") != "" {
 		name, e = shortenURL(r.Header.Get("Location"))
 	}
 	if e != nil {
 		w.WriteHeader(500)
-		log.Println(e)
+		log.Printf("Upload error: %v\n", e)
 		fmt.Fprintf(w, e.Error())
 	}
 	url := "http://" + r.Host + "/" + name
