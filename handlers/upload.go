@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -32,47 +33,62 @@ func randomName() string {
 	return n
 }
 
-func fileUpload(u multipart.File, h *multipart.FileHeader, e error) (string, error) {
-	n := randomName()
+func fileUpload(upload multipart.File, h *multipart.FileHeader, e error) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	f, e := os.Create("files/" + n)
+	var name string
+	var mtype string
+	id := randomName()
+	ext := strings.Split(h.Filename, ".")
+	// Check whether it has an extension (split on dot will be bigger than 1)
+	if len(ext) > 1 {
+		name = id + "." + ext[len(ext)-1]
+		mtype = mime.TypeByExtension("." + ext[len(ext)-1])
+		log.Printf("Name %s, mtype %s\n", name, mtype)
+	} else {
+		name = id
+		mtype = "application/octet-stream" // Default content-type
+	}
+	file, e := os.Create(path + name)
 	if e != nil {
 		return "", e
 	}
-	defer f.Close()
-	_, e = io.Copy(io.Writer(f), io.Reader(u))
+	defer file.Close()
+	_, e = io.Copy(io.Writer(file), io.Reader(upload))
 	if e != nil {
 		return "", e
 	}
-	r, e := storage.AddUpload(storage.Object{ID: n, Type: 0, OriginalName: h.Filename, Location: f.Name()})
+	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.File, OriginalName: h.Filename, Location: file.Name(), MimeType: mtype})
 	log.Printf("Result: %v, Error: %v\n", r, e)
-	return n, nil
+	return name, nil
 }
 
-func shortenURL() (string, error) {
-	return "", nil
+func shortenURL(url string) (string, error) {
+	id := randomName()
+	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.URL, Location: url})
+	log.Printf("Result: %v, Error: %v\n", r, e)
+	return id, e
 }
 
 // Upload is the file upload handler.
 func Upload(w http.ResponseWriter, r *http.Request) {
 	var e error
-	var n string
-	if r.Header["Content-Type"] == nil {
-		w.WriteHeader(500)
-		log.Println("Missing Content-Type!")
-		fmt.Fprintf(w, "Missing content-type")
-	}
-	if strings.Split(r.Header.Get("Content-Type"), ";")[0] == "multipart/form-data" {
-		log.Println("It's a file")
-		n, e = fileUpload(r.FormFile("file"))
+	var name string
+	if r.Header.Get("Content-Type") != "" {
+		if strings.Split(r.Header.Get("Content-Type"), ";")[0] == "multipart/form-data" {
+			log.Println(r.Header.Get("Content-Type"))
+			name, e = fileUpload(r.FormFile("file"))
+		}
+	} else if r.Header.Get("Location") != "" {
+		name, e = shortenURL(r.Header.Get("Location"))
 	}
 	if e != nil {
 		w.WriteHeader(500)
 		log.Println(e)
 		fmt.Fprintf(w, e.Error())
 	}
-	log.Println("http://" + r.Host + "/" + n + "\n")
-	fmt.Fprintf(w, "http://"+r.Host+"/"+n+"\n")
+	url := "http://" + r.Host + "/" + name
+	log.Println(url)
+	fmt.Fprintf(w, url)
 }

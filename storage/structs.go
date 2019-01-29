@@ -9,6 +9,7 @@ type Object struct {
 	Type         Type   `json:"type"`
 	Location     string `json:"location"`
 	OriginalName string `json:"originalName"`
+	MimeType     string `json:"mimeType"`
 }
 
 // Type represents the type of upload

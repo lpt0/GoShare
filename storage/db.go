@@ -45,13 +45,14 @@ func AddUpload(object Object) (bool, error) {
 		return false, errors.New("ID field cannot be empty")
 	}
 	_, e := db.Exec(
-		"INSERT INTO uploads VALUES($1, $2, $3, $4, $5, $6)",
+		"INSERT INTO uploads VALUES($1, $2, $3, $4, $5, $6, $7)",
 		object.ID,
 		object.Date,
 		object.Uploader,
 		object.Type,
 		object.Location,
 		object.OriginalName,
+		object.MimeType,
 	)
 	if e != nil {
 		log.Panicln(e)
@@ -64,9 +65,9 @@ func AddUpload(object Object) (bool, error) {
 // An error will be returned if the lookup failed.
 func GetUpload(ID string) (Object, error) {
 	o := Object{}
-	log.Printf("Attempting to get basic upload ID %s\n", ID)
-	r := db.QueryRow("SELECT type, location FROM uploads WHERE id=?", ID)
-	e := r.Scan(&o.Type, &o.Location)
+	log.Printf("Attempting to get upload ID %s\n", ID)
+	r := db.QueryRow("SELECT type, location, mimetype FROM uploads WHERE id=?", ID)
+	e := r.Scan(&o.Type, &o.Location, &o.MimeType)
 	if e != nil {
 		log.Printf("GetUpload ID %s had an error: %v\n", ID, e)
 		return Object{}, e
@@ -78,19 +79,18 @@ func GetUpload(ID string) (Object, error) {
 // Initialize will create the proper table in the database, if not present.
 func Initialize(d *sql.DB) {
 	db = d
-	r, e := d.Exec(`
+	_, e := d.Exec(`
 		CREATE TABLE IF NOT EXISTS uploads (
 			id CHAR(6),
 			date BIGINT,
 			uploader VARCHAR(255),
 			type INT,
 			location TEXT,
-			original_name TEXT
+			original_name TEXT,
+			mimetype TEXT
 		);
 	`)
 	if e != nil {
 		log.Panicln(e)
 	}
-	i, e := r.RowsAffected()
-	log.Printf("Rows affected %d; error %v\n", i, e)
 }
