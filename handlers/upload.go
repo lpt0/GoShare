@@ -87,7 +87,9 @@ func shortenURL(url, uploader string) (string, error) {
 func Upload(w http.ResponseWriter, r *http.Request) {
 	var e error
 	var name string
-	uploader := config.Authorization[r.Header.Get("Authorization")]
+	uploader := config.Authorization[strings.ToLower(r.Header.Get("Authorization"))]
+	fmt.Println(uploader, r.Header.Get("Authorization"))
+	fmt.Println(config.Authorization)
 	if uploader != "" {
 		if r.Header.Get("Content-Type") != "" {
 			if strings.Split(r.Header.Get("Content-Type"), ";")[0] == "multipart/form-data" {
@@ -106,6 +108,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		url := "http://" + r.Host + "/" + name
 		log.Println(uploader + " uploaded " + url)
 		fmt.Fprintf(w, url)
+	} else {
+		w.WriteHeader(403)
 	}
-
 }

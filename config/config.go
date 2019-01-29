@@ -24,7 +24,7 @@ var Redirects []string
 
 // Initialize will set the above config values, using Viper
 func Initialize() {
-	viper.SetConfigName("config.json")
+	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	e := viper.ReadInConfig()
 	if e != nil {
