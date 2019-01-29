@@ -3,3 +3,6 @@ files
 *.db
 *.exe
 *.out
+
+# Ignore actual config file
+config.json
