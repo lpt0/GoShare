@@ -4,8 +4,9 @@ package storage
 
 import (
 	"database/sql"
-	"errors"
 	"log"
+
+	"github.com/juju/errors"
 )
 
 // Storage interface describes the methods available to interact with the database
@@ -46,10 +47,10 @@ func IDExists(ID string) bool {
 	r := db.QueryRow("SELECT id FROM uploads WHERE id=$1", ID)
 	e := r.Scan()
 	if e != nil && e == sql.ErrNoRows {
-		log.Printf("ID %s not found.\n", ID)
+		log.Println(errors.Annotate(e, "IDExists NotFound"), ID)
 		return false
 	} else if e == nil {
-		log.Panicf("IDExists ID %s had an error: %v\n", ID, e)
+		log.Println(errors.Annotate(e, "IDExists OtherError"), ID)
 		return false
 	}
 	return true
@@ -74,7 +75,8 @@ func AddUpload(object Object) (bool, error) {
 		object.MimeType,
 	)
 	if e != nil {
-		log.Panicln(e)
+		log.Println(errors.Annotate(e, "AddUpload DB"), object)
+		return false, e
 	}
 	return true, nil
 }
@@ -88,10 +90,10 @@ func GetUpload(ID string) (Object, error) {
 	r := db.QueryRow("SELECT type, location, mimetype FROM uploads WHERE id=?", ID)
 	e := r.Scan(&o.Type, &o.Location, &o.MimeType)
 	if e != nil {
+		log.Println(errors.Annotate(e, "GetUpload"), ID)
 		log.Printf("GetUpload ID %s had an error: %v\n", ID, e)
 		return Object{}, e
 	}
-	log.Printf("Query succeeded for ID %s (%v)\n", ID, r)
 	return o, nil
 }
 

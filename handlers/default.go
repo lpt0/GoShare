@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/juju/errors"
 )
 
 // Default provides the default route (/)
@@ -26,14 +28,14 @@ func Default(w http.ResponseWriter, r *http.Request) {
 	} else if upload.Type == storage.File {
 		f, e := os.Open(upload.Location)
 		if e != nil {
-			log.Printf("DefaultRoute error: %v\n", e)
+			log.Println(errors.Annotate(e, "DefaultRoute File"))
 			w.WriteHeader(500)
 			return
 		}
 		w.Header().Set("Content-Type", upload.MimeType)
 		_, e = io.Copy(io.Writer(w), io.Reader(f))
 		if e != nil {
-			log.Printf("DefaultRouteCopy error: %v\n", e)
+			log.Println(errors.Annotate(e, "DefaultRoute Copy"))
 		}
 		w.WriteHeader(200)
 		return

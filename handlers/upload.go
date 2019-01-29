@@ -12,6 +12,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/juju/errors"
 )
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -86,7 +88,6 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	var name string
 	if r.Header.Get("Content-Type") != "" {
 		if strings.Split(r.Header.Get("Content-Type"), ";")[0] == "multipart/form-data" {
-			log.Println(r.Header.Get("Content-Type"))
 			name, e = fileUpload(r.FormFile("file"))
 		}
 	}
@@ -95,8 +96,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	if e != nil {
 		w.WriteHeader(500)
-		log.Printf("Upload error: %v\n", e)
-		fmt.Fprintf(w, e.Error())
+		log.Println(errors.Annotate(e, "Upload error"))
+		return
 	}
 	url := "http://" + r.Host + "/" + name
 	log.Println(url)
