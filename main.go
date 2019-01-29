@@ -3,6 +3,7 @@ package main
 
 import (
 	"database/sql"
+	"goshare/config"
 	"goshare/handlers"
 	"goshare/storage"
 	"log"
@@ -20,14 +21,15 @@ type test struct {
 func main() {
 	var e error
 	r := mux.NewRouter()
-	db, e := sql.Open("sqlite3", "./test.db")
+	config.Initialize()
+	db, e := sql.Open("sqlite3", config.DBPath)
 	if e != nil {
 		log.Panicln(e)
 	}
 	storage.Initialize(db)
 	r.PathPrefix("/").HandlerFunc(handlers.Default).Methods("GET")
 	r.HandleFunc("/upload", handlers.Upload).Methods("POST")
-	e = http.ListenAndServe("127.0.0.1:8080", r)
+	e = http.ListenAndServe("127.0.0.1:"+config.Port, r)
 	if e != nil {
 		log.Panicln(e)
 	}

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"goshare/config"
 	"goshare/storage"
 	"io"
 	"log"
@@ -19,7 +20,7 @@ import (
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // Path is the storage path for uploaded files
-var path = os.Getenv("FILES") + "/"
+var path = config.FilePath
 
 // randomName generates a random file name, and checks it.
 // If the file exists, it calls itself until it finds one that doesn't, returning that.
@@ -36,7 +37,7 @@ func randomName() string {
 	return n
 }
 
-func fileUpload(upload multipart.File, h *multipart.FileHeader, e error) (string, error) {
+func fileUpload(upload multipart.File, h *multipart.FileHeader, e error, uploader string) (string, error) {
 	if e != nil {
 		return "", e
 	}
@@ -62,12 +63,12 @@ func fileUpload(upload multipart.File, h *multipart.FileHeader, e error) (string
 	if e != nil {
 		return "", e
 	}
-	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.File, OriginalName: h.Filename, Location: file.Name(), MimeType: mtype})
+	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.File, OriginalName: h.Filename, Location: file.Name(), MimeType: mtype, Uploader: uploader})
 	log.Printf("Result: %v, Error: %v\n", r, e)
 	return name, nil
 }
 
-func shortenURL(url string) (string, error) {
+func shortenURL(url, uploader string) (string, error) {
 	id := randomName()
 	// Execute wget with warc here
 	c := exec.Command("wget", "--page-requisites", "--delete-after", "--no-directories", "--warc-file="+id, "--warc-cdx", url)
@@ -77,7 +78,7 @@ func shortenURL(url string) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.URL, Location: url})
+	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.URL, Location: url, Uploader: uploader})
 	log.Printf("Result: %v, Error: %v\n", r, e)
 	return id, e
 }
@@ -86,20 +87,25 @@ func shortenURL(url string) (string, error) {
 func Upload(w http.ResponseWriter, r *http.Request) {
 	var e error
 	var name string
-	if r.Header.Get("Content-Type") != "" {
-		if strings.Split(r.Header.Get("Content-Type"), ";")[0] == "multipart/form-data" {
-			name, e = fileUpload(r.FormFile("file"))
+	uploader := config.Authorization[r.Header.Get("Authorization")]
+	if uploader != "" {
+		if r.Header.Get("Content-Type") != "" {
+			if strings.Split(r.Header.Get("Content-Type"), ";")[0] == "multipart/form-data" {
+				u, h, e := r.FormFile("file")
+				name, e = fileUpload(u, h, e, uploader)
+			}
 		}
+		if name == "" && r.Header.Get("Location") != "" {
+			name, e = shortenURL(r.Header.Get("Location"), uploader)
+		}
+		if e != nil {
+			w.WriteHeader(500)
+			log.Println(errors.Annotate(e, "Upload error"))
+			return
+		}
+		url := "http://" + r.Host + "/" + name
+		log.Println(uploader + " uploaded " + url)
+		fmt.Fprintf(w, url)
 	}
-	if name == "" && r.Header.Get("Location") != "" {
-		name, e = shortenURL(r.Header.Get("Location"))
-	}
-	if e != nil {
-		w.WriteHeader(500)
-		log.Println(errors.Annotate(e, "Upload error"))
-		return
-	}
-	url := "http://" + r.Host + "/" + name
-	log.Println(url)
-	fmt.Fprintf(w, url)
+
 }
