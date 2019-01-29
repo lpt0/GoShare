@@ -25,7 +25,6 @@ func IDExists(ID string) bool {
 	log.Printf("Attempting to query for ID %s\n...", ID)
 	r := db.QueryRow("SELECT id FROM uploads WHERE id=$1", ID)
 	e := r.Scan()
-	log.Println(e)
 	if e != nil && e == sql.ErrNoRows {
 		log.Printf("ID %s not found.\n", ID)
 		return false
@@ -72,7 +71,7 @@ func GetUpload(ID string) (Object, error) {
 		log.Printf("GetUpload ID %s had an error: %v\n", ID, e)
 		return Object{}, e
 	}
-	log.Printf("Query succeeded for ID %s: %v\n", ID, r)
+	log.Printf("Query succeeded for ID %s (%v)\n", ID, r)
 	return o, nil
 }
 
