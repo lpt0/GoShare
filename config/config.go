@@ -13,6 +13,12 @@ var FilePath string
 // DBPath is the path to the database file
 var DBPath string
 
+// Protocol is either http or https
+var Protocol string
+
+// Host is the hostname for the server
+var Host string
+
 // Port is for the HTTP server
 var Port string
 
@@ -32,6 +38,8 @@ func Initialize() {
 	}
 	FilePath = viper.GetString("FilePath")
 	DBPath = viper.GetString("DBPath")
+	Protocol = viper.GetString("Protocol")
+	Host = viper.GetString("Host")
 	Port = viper.GetString("Port")
 	Authorization = viper.GetStringMapString("Authorization")
 	Redirects = viper.GetStringSlice("Redirects")
