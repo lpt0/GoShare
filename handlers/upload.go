@@ -88,8 +88,6 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	var e error
 	var name string
 	uploader := config.Authorization[strings.ToLower(r.Header.Get("Authorization"))]
-	fmt.Println(uploader, r.Header.Get("Authorization"))
-	fmt.Println(config.Authorization)
 	if uploader != "" {
 		if r.Header.Get("Content-Type") != "" {
 			if strings.Split(r.Header.Get("Content-Type"), ";")[0] == "multipart/form-data" {
