@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -66,6 +67,14 @@ func fileUpload(upload multipart.File, h *multipart.FileHeader, e error) (string
 
 func shortenURL(url string) (string, error) {
 	id := randomName()
+	// Execute wget with warc here
+	c := exec.Command("wget", "--page-requisites", "--delete-after", "--no-directories", "--warc-file="+id, "--warc-cdx", url)
+	c.Dir = path
+	o, e := c.CombinedOutput()
+	log.Printf("shortenURL wget: %v\n", string(o))
+	if e != nil {
+		return "", e
+	}
 	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.URL, Location: url})
 	log.Printf("Result: %v, Error: %v\n", r, e)
 	return id, e
