@@ -26,12 +26,13 @@ func main() {
 	if e != nil {
 		log.Panicln(e)
 	}
+	defer db.Close()
 	storage.Initialize(db)
 	r.PathPrefix("/").HandlerFunc(handlers.Default).Methods("GET")
 	r.HandleFunc("/upload", handlers.Upload).Methods("POST")
+	log.Println("Server is ready.")
 	e = http.ListenAndServe("127.0.0.1:"+config.Port, r)
 	if e != nil {
 		log.Panicln(e)
 	}
-	defer db.Close()
 }

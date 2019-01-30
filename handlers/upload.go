@@ -19,9 +19,6 @@ import (
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-// Path is the storage path for uploaded files
-var path = config.FilePath
-
 // randomName generates a random file name, and checks it.
 // If the file exists, it calls itself until it finds one that doesn't, returning that.
 func randomName() string {
@@ -54,7 +51,7 @@ func fileUpload(upload multipart.File, h *multipart.FileHeader, e error, uploade
 		name = id
 		mtype = "application/octet-stream" // Default content-type
 	}
-	file, e := os.Create(path + name)
+	file, e := os.Create(config.FilePath + name)
 	if e != nil {
 		return "", e
 	}
@@ -72,7 +69,7 @@ func shortenURL(url, uploader string) (string, error) {
 	id := randomName()
 	// Execute wget with warc here
 	c := exec.Command("wget", "--page-requisites", "--delete-after", "--no-directories", "--warc-file="+id, "--warc-cdx", url)
-	c.Dir = path
+	c.Dir = config.FilePath
 	o, e := c.CombinedOutput()
 	log.Printf("shortenURL wget: %v\n", string(o))
 	if e != nil {
@@ -103,7 +100,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			log.Println(errors.Annotate(e, "Upload error"))
 			return
 		}
-		url := "http://" + r.Host + "/" + name
+		url := config.Protocol + "://" + config.Host + "/" + name
 		log.Println(uploader + " uploaded " + url)
 		fmt.Fprintf(w, url)
 	} else {
