@@ -103,7 +103,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		url := config.Protocol + "://" + config.Host + "/" + name
 		log.Println(uploader + " uploaded " + url)
 		fmt.Fprintf(w, url)
-	} else {
-		w.WriteHeader(403)
+		return
 	}
+	w.WriteHeader(403)
+	return
 }

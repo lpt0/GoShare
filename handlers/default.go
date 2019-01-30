@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"goshare/config"
 	"goshare/storage"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -17,9 +19,11 @@ func Default(w http.ResponseWriter, r *http.Request) {
 	id := strings.Split(url[len(url)-1], ".")[0]
 	upload, e := storage.GetUpload(id)
 	if e != nil {
-		w.Header().Set("Location", "https://plaza.one")
+		redirect := config.Redirects[rand.Intn(len(config.Redirects))]
+		log.Println("Redirecting to " + redirect)
+		w.Header().Set("Location", redirect)
 		w.WriteHeader(301)
-		//w.Write(make([]byte, 1))
+		return
 	}
 	if upload.Type == storage.URL {
 		w.Header().Set("Location", upload.Location)

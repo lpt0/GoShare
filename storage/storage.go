@@ -91,7 +91,6 @@ func GetUpload(ID string) (Object, error) {
 	e := r.Scan(&o.Type, &o.Location, &o.MimeType)
 	if e != nil {
 		log.Println(errors.Annotate(e, "GetUpload"), ID)
-		log.Printf("GetUpload ID %s had an error: %v\n", ID, e)
 		return Object{}, e
 	}
 	return o, nil
