@@ -96,6 +96,20 @@ func GetUpload(ID string) (Object, error) {
 	return o, nil
 }
 
+// GetMimeType will query the database for the mimetype of the given ID.
+// This is mainly for the flash viewer
+func GetMimeType(ID string) (Object, error) {
+	o := Object{}
+	log.Printf("Attempting to get type for upload ID %s\n", ID)
+	r := db.QueryRow("SELECT mimetype FROM uploads WHERE id=?", ID)
+	e := r.Scan(&o.MimeType)
+	if e != nil {
+		log.Println(errors.Annotate(e, "GetMimeType"), ID)
+		return Object{}, e
+	}
+	return o, nil
+}
+
 // Initialize will create the proper table in the database, if not present.
 func Initialize(d *sql.DB) {
 	db = d
