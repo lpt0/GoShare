@@ -62,6 +62,9 @@ func fileUpload(upload multipart.File, h *multipart.FileHeader, e error, uploade
 	}
 	r, e := storage.AddUpload(storage.Object{ID: id, Type: storage.File, OriginalName: h.Filename, Location: file.Name(), MimeType: mtype, Uploader: uploader})
 	log.Printf("Result: %v, Error: %v\n", r, e)
+	if mtype == "application/x-shockwave-flash" {
+		return "flash/" + name, nil
+	}
 	return name, nil
 }
 
