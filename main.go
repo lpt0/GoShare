@@ -28,6 +28,7 @@ func main() {
 	}
 	defer db.Close()
 	storage.Initialize(db)
+	r.HandleFunc("/favicon.ico", handlers.Favicon).Methods("GET")
 	r.PathPrefix("/flash/").HandlerFunc(handlers.Flash).Methods("GET")
 	r.PathPrefix("/").HandlerFunc(handlers.Default).Methods("GET")
 	r.HandleFunc("/upload", handlers.Upload).Methods("POST")

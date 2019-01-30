@@ -3,6 +3,7 @@ files
 *.db
 *.exe
 *.out
+*.ico
 
 # Ignore actual config file
 config.json
