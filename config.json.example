@@ -1,0 +1,13 @@
+{
+    "FilePath": "./files/",
+    "DBPath": "./goshare.db",
+    "Redirects": [
+        "https://github.com/lpt0/GoShare"
+    ],
+    "Protocol": "http",
+    "Host": "localhost",
+    "Port": "8080",
+    "Authorization": {
+        "AAAA": "Test user"
+    }
+}
