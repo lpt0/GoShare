@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"goshare/config"
-	"goshare/storage"
+	"github.com/lpt0/goshare/config"
+	"github.com/lpt0/goshare/storage"
 	"io"
 	"log"
 	"math/rand"
@@ -103,7 +103,11 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			log.Println(errors.Annotate(e, "Upload error"))
 			return
 		}
-		url := config.Protocol + "://" + config.Host + "/" + name
+		url := config.Protocol + "://" + config.Host
+		if config.Port != "" {
+			url += ":" + config.Port
+		}
+		url += "/" + name
 		log.Println(uploader + " uploaded " + url)
 		fmt.Fprintf(w, url)
 		return

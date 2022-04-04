@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"goshare/config"
-	"goshare/storage"
+	"github.com/lpt0/goshare/config"
+	"github.com/lpt0/goshare/storage"
 	"io"
 	"log"
 	"math/rand"

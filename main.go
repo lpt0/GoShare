@@ -3,9 +3,9 @@ package main
 
 import (
 	"database/sql"
-	"goshare/config"
-	"goshare/handlers"
-	"goshare/storage"
+	"github.com/lpt0/goshare/config"
+	"github.com/lpt0/goshare/handlers"
+	"github.com/lpt0/goshare/storage"
 	"log"
 	"net/http"
 

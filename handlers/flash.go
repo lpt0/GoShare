@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"goshare/storage"
+	"github.com/lpt0/goshare/storage"
 	"io"
 	"log"
 	"net/http"
